@@ -1,5 +1,6 @@
 package udem.edu.co.controller;
 
+import java.io.IOException;
 import udem.edu.co.entitys.Users;
 import udem.edu.co.controller.util.JsfUtil;
 import udem.edu.co.controller.util.PaginationHelper;
@@ -7,38 +8,42 @@ import udem.edu.co.facade.UsersFacade;
 
 import java.io.Serializable;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
+import javax.enterprise.context.RequestScoped;
 import javax.inject.Named;
 import javax.enterprise.context.SessionScoped;
+import javax.faces.bean.ManagedProperty;
+import javax.faces.bean.ViewScoped;
 import javax.faces.component.UIComponent;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.faces.convert.FacesConverter;
 import javax.faces.model.DataModel;
 import javax.faces.model.ListDataModel;
 import javax.faces.model.SelectItem;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
-@Named("usersController")
-@SessionScoped
-public class UsersController implements Serializable {
+@Named("LoginController1")
+@ViewScoped
+public class LoginController1 implements Serializable {
 
     private Users current;
-    private Users userLoger; 
     private DataModel items = null;
     @EJB
     private udem.edu.co.facade.UsersFacade ejbFacade;
     private PaginationHelper pagination;
     private int selectedItemIndex;
-    
+     @ManagedProperty("#{usersController}")
+    private UsersController userController;
+     
 
-    public UsersController() {
-        userLoger = null;
+    public LoginController1() {
     }
-
-    public Users getUserLoger() {
-        return userLoger;
-    }
-    
 
     public Users getSelected() {
         if (current == null) {
@@ -46,6 +51,30 @@ public class UsersController implements Serializable {
             selectedItemIndex = -1;
         }
         return current;
+    }
+     @PostConstruct
+    public void init() {
+         //System.out.println("Hola MUNDO");
+          Users us= userController.getUserLoger();
+         if (us == null) {
+             FacesContext context = FacesContext.getCurrentInstance();
+             ExternalContext extContext = context.getExternalContext();
+             try {
+                ((HttpSession) extContext.getSession(false)).invalidate();
+                ((HttpServletRequest) extContext.getRequest()).logout();
+              
+                  extContext.redirect("index.xhtml");
+              } catch (IOException ex) {
+                  Logger.getLogger(LoginController1.class.getName()).log(Level.SEVERE, null, ex);
+              } catch (Exception ex) {
+                  Logger.getLogger(LoginController1.class.getName()).log(Level.SEVERE, null, ex);
+              }
+         }   
+         
+    }
+    public String getSalida (){
+        
+        return "Hola";
     }
 
     private UsersFacade getFacade() {
@@ -86,13 +115,12 @@ public class UsersController implements Serializable {
         selectedItemIndex = -1;
         return "Create";
     }
-   
+    
     public String login() {
         
         try {           
             Users us = ejbFacade.login(current);
             if(us != null){
-                userLoger = us;
                 return "welcomePrimefaces";
             }else{
                 return "index";
@@ -225,7 +253,7 @@ public class UsersController implements Serializable {
             if (value == null || value.length() == 0) {
                 return null;
             }
-            UsersController controller = (UsersController) facesContext.getApplication().getELResolver().
+            LoginController1 controller = (LoginController1) facesContext.getApplication().getELResolver().
                     getValue(facesContext.getELContext(), null, "usersController");
             return controller.getUsers(getKey(value));
         }

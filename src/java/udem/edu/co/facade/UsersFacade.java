@@ -31,7 +31,7 @@ public class UsersFacade extends AbstractFacade<Users> {
         super(Users.class);
     }
     
-    public boolean login(Users user){
+    public Users login(Users user){
         String consulta;
         consulta  = "FROM Users u WHERE u.username = ?1 and u.password = ?2";//Busqueda de los datos que se ingresan en la base de datos
         Query query = em.createQuery(consulta);
@@ -40,10 +40,10 @@ public class UsersFacade extends AbstractFacade<Users> {
         
         List<Users> lista = query.getResultList();
         if (lista.isEmpty()) {
-            return false;
+            return null;
         }else{
             System.out.println("encontrado");
-            return true;
+            return lista.get(0);
         }
         
     }
